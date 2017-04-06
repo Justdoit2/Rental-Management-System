@@ -1,0 +1,279 @@
+/* This file shows the output of my code*/
+
+1.2
+/*a) There is only 1 manager per branch */
+
+SQL> start a.sql
+
+Trigger created.
+
+No errors.
+SQL> select * from employees;
+
+EMPLO BRANC NAME                      PHONE JOBDESIGNA
+----- ----- -------------------- ---------- ----------
+e1    b1    Joe                     1111111 Supervisor
+e2    b2    Toe                     1111111 Supervisor
+e3    b1    Helen                   2323232 Manager
+/* before inserting another manager to same branch ^*/
+
+SQL> insert into employees values  ('e4', 'b1', 'test', 343434343,'Manager');
+insert into employees values  ('e4', 'b1', 'test', 343434343,'Manager')
+            *
+ERROR at line 1:
+ORA-20000: Limit one manager per branch
+ORA-06512: at "ANIU.LIMIT_MANAGER_TRIG", line 7
+ORA-04088: error during execution of trigger 'ANIU.LIMIT_MANAGER_TRIG'
+/* cannot insert another manager in same branch */
+
+/*b) A lease agreement should be for a minimum of six months and a maximum of one year. */
+SQL> start c.sql
+
+Trigger created.
+
+No errors.
+SQL> select * from leaseagreement;
+
+RENTERNAME           STARTDATE ENDDATELE DEPOSITAMOUNT RENTAMOUNT SUPID
+-------------------- --------- --------- ------------- ---------- -----
+Alma                 01-JAN-15 01-JAN-16           400        500 e1
+Dan                  13-NOV-16 17-MAY-17           500        500 e2
+Alma                 01-JAN-18 01-JAN-19           500        400 e1
+Dan                  01-JAN-11 01-JUL-11             5          5 e2
+
+SQL> insert into leaseagreement values('Dan',Date '2011-01-01',Date '2017-05-01', 5, 5, 'e2');
+insert into leaseagreement values('Dan',Date '2011-01-01',Date '2017-05-01', 5, 5, 'e2')
+            *
+ERROR at line 1:
+ORA-20001: Need to lease minimum 6 months and maximum a year
+
+/*c When a lease agreement is created, the status for the property should be changed to leased. */
+
+SQL> start b.sql
+
+Trigger created.
+
+No errors.
+SQL> select * from rental;
+
+RENTN SUPER OWNNAME              CITY_ADDRESS            NOROOMS MONTHLYRENT
+----- ----- -------------------- -------------------- ---------- -----------
+STATUS               STARTDATE                                              
+-------------------- ---------                                              
+r1    e1    Keeks                Earth                         2         500
+available            13-MAR-16                                              
+
+r2    e1    Keeks                Pluto                         1         500
+available            14-MAR-17                                              
+
+r3    e2    Keeks                Mars                          6         500
+available            14-MAR-17                                              
+
+
+RENTN SUPER OWNNAME              CITY_ADDRESS            NOROOMS MONTHLYRENT
+----- ----- -------------------- -------------------- ---------- -----------
+STATUS               STARTDATE                                              
+-------------------- ---------                                              
+r4    e2    Jade                 Pluto                         5         500
+leased               04-APR-40
+
+
+SQL> insert into leaseagreement values ( 'Alma', DATE '2019-01-01',DATE '2020-01-01', 500.00, 500.00,'e2');
+
+1 row created.
+
+SQL> select * from rental;
+
+RENTN SUPER OWNNAME              CITY_ADDRESS            NOROOMS MONTHLYRENT
+----- ----- -------------------- -------------------- ---------- -----------
+STATUS               STARTDATE
+-------------------- ---------
+r1    e1    Keeks                Earth                         2         500
+available            13-MAR-16
+
+r2    e1    Keeks                Pluto                         1         500
+available            14-MAR-17
+
+r3    e2    Keeks                Mars                          6         550  /*changed */
+leased               14-MAR-17
+
+
+RENTN SUPER OWNNAME              CITY_ADDRESS            NOROOMS MONTHLYRENT
+----- ----- -------------------- -------------------- ---------- -----------
+STATUS               STARTDATE
+-------------------- ---------
+r4    e2    Jade                 Pluto                         5         500
+leased               04-APR-40
+
+
+SQL>
+
+/* d )  When a rental property is removed from the list of rentals, it should also be removed from its supervisor’s list.  */
+
+delete from rental where supervisorId='e3';
+select * from supervisor;
+
+SQL> select * from supervisor;
+
+EMPLO STARTDATE
+----- ---------
+e1    25-MAY-16
+e2    26-JUN-17  
+
+SQL>
+
+/* e) With every new lease, a 10% increase in rent should be added to the rent from the previous lease. */
+
+
+SQL> insert into leaseagreement values ( 'Alma', DATE '2017-05-13',DATE '2017-12-13', 800.00, 700.00,'e1');
+Trig fired!
+
+1 row created.
+
+SQL> select * from rental;
+
+RENTN SUPER OWNNAME              CITY_ADDRESS            NOROOMS MONTHLYRENT
+----- ----- -------------------- -------------------- ---------- -----------
+STATUS               STARTDATE
+-------------------- ---------
+r1    e1    Keeks                Earth                         2         550  /*rent all increased by 10% */
+leased               13-MAR-16
+
+r2    e1    Keeks                Pluto                         1         440 
+available            14-MAR-17
+
+r3    e2    Keeks                Mars                          6         660
+available            14-MAR-17
+
+
+RENTN SUPER OWNNAME              CITY_ADDRESS            NOROOMS MONTHLYRENT
+----- ----- -------------------- -------------------- ---------- -----------
+STATUS               STARTDATE
+-------------------- ---------
+r4    e2    Jade                 Pluto                         5         990
+leased               04-APR-40
+
+
+SQL>
+
+1.3
+/*1)Generate a list of rental properties available for a specific branch along with the manager’s name. */
+
+
+SQL> exec t1('b1')
+Manager: Helen
+Rental #: r1 Property owner: Keeks
+Rental #: r2 Property owner: Keeks
+
+PL/SQL procedure successfully completed.
+
+
+/*2) Generate a list of supervisors and the properties (with addresses) they supervise.*/
+
+SQL> exec t2function()
+e1 r1 Keeks Earth 2 500
+e1 r2 Keeks Pluto 1 400
+e2 r3 Keeks Mars 6 600
+
+PL/SQL procedure successfully completed.
+
+SQL>
+
+/*3)Generate a list of rental properties by a specific owner, listed in a GreenField branch. */
+
+
+No errors.
+SQL> exec t3('Keeks')
+RentalNo: r1
+RentalNo: r2
+RentalNo: r3
+
+PL/SQL procedure successfully completed.
+
+/* 4)  Show a listing of properties available, where the properties should satisfy the criteria (city, no of rooms and/or range for rent given as input). */
+No errors.
+SQL> execute showCriteria('Pluto',1,359,401);
+Rental Property Results:r2 Keeks Pluto 1 400
+
+PL/SQL procedure successfully completed.
+
+/*5) Show the number of properties available for rent by branch. */
+
+
+No errors.
+SQL> exec AvailBranch()
+Branch b2 has 1 rentals available
+Branch b1 has 2 rentals available
+
+PL/SQL procedure successfully completed.
+
+/*6)  Create a lease agreement (See section 1.1). 
+The information to be entered into this agreement can be input via a Graphical User interface (See section 2.1) or from the command line. */
+
+SQL> exec createLeaseAgree('Dan',date '2016-11-13', date '2017-05-17',700,500,'e1');
+
+PL/SQL procedure successfully completed.
+
+SQL> select * from leaseagreement;
+
+RENTERNAME           STARTDATE ENDDATELE DEPOSITAMOUNT RENTAMOUNT SUPID
+-------------------- --------- --------- ------------- ---------- -----
+Alma                 01-JAN-18 01-JAN-19           500        550 e1
+Alma                 13-JUN-17 13-DEC-17           800        700 e1
+Alma                 01-JAN-15 01-JAN-16           400        440 e1
+Dan                  13-NOV-16 13-MAY-17           600        600 e2
+Dan                  13-NOV-16 17-MAY-17           700        500 e1
+
+SQL>
+
+
+/*7) Show a lease agreement for a renter.*/
+
+SQL> exec showLease('Alma');
+Lease Results:Alma 01-JAN-18 01-JAN-19 500 500 e1
+Lease Results:Alma 01-JAN-17 01-JAN-18 400 400 e1
+
+PL/SQL procedure successfully completed.
+
+/*8) Show the renters who rented more than one rental property.*/
+
+SQL> exec MoreThanOne()
+The renters with more than one are:Alma 1121222 45344566 Biden 555344 1000
+
+PL/SQL procedure successfully completed.
+
+/* 9) Show the average rent for properties in a town (name of the town is entered as input). 
+You can take the average of all the properties that are rented out (in that town) and those available for rent in that town. */
+
+exec avrgRent('Pluto')
+avg available: 400
+avg leased: 900
+
+PL/SQL procedure successfully completed.
+
+/* 10) Show the names and addresses of properties whose leases will expire in next two months (from the current date).*/
+
+Procedure created.
+
+SQL> exec withinNextTwoMonths()
+Keeks Pluto
+Keeks Earth
+Keeks Mars
+
+PL/SQL procedure successfully completed.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

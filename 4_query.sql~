@@ -1,0 +1,17 @@
+ 
+/*
+ Show a listing of properties available, where the properties should satisfy 
+the criteria (city, no of rooms and/or range for rent given as input).
+//our city is our address
+*/
+
+
+SQL> select * from rental where city_Address='Pluto' and noRooms=1 and status='available' and monthlyRent between 359 and 401;
+
+RENTN SUPER OWNNAME              CITY_ADDRESS            NOROOMS MONTHLYRENT
+----- ----- -------------------- -------------------- ---------- -----------
+STATUS               STARTDATE
+-------------------- ---------
+r2    e1    Keeks                Pluto                         1         400
+available            14-MAR-17
+

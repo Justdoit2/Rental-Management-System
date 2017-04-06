@@ -1,0 +1,9 @@
+ 
+select supervisorId, RentNum, OwnName,address,noRooms,monthlyRent from Rental order by supervisorId;
+
+SUPER RENTN OWNNAME              ADDRESS                 NOROOMS MONTHLYRENT
+----- ----- -------------------- -------------------- ---------- -----------
+e1    r1    Keeks                Earth                         2         500
+e1    r2    Keeks                Pluto                         1         400
+e2    r3    Keeks                Mars                          6         600
+
